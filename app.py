@@ -1,8 +1,11 @@
+import traceback
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 import os
+
+from api.rakuten_api import fetch_recipe_categories, fetch_recipe_category_ranking
 
 app = Flask(__name__)
 
@@ -14,6 +17,11 @@ def webhook():
   signature = request.headers["X-Line-Signature"]
 
   body = request.get_data(as_text=True)
+  
+  # print("--------------", flush=True)
+  # print(request.headers, flush=True)
+  # print(body, flush=True)
+  # print("--------------", flush=True)
 
   try:
     handler.handle(body, signature)
@@ -25,15 +33,23 @@ def webhook():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    try:
-      user_message = event.message.text
-      line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=f"RecipeMateへようこそ！")
-            )
-    except Exception as e:
-        print(f"Error handling message: {e}"
+  try:
+    user_message = event.message.text
+    
+    df_keyword = fetch_recipe_categories(user_message)
+    print(df_keyword, flush=True)
+
+    fetch_recipe_category_ranking(df_keyword)
+
+    reply_text = "カテゴリ一覧:\n"
+    
+    line_bot_api.reply_message(
+      event.reply_token,
+      TextSendMessage(text=reply_text)
     )
+  except Exception as e:
+    print(f"Error handling message: {e}", flush=True)
+    traceback.print_exc()
 
 
 if __name__ == '__main__':
