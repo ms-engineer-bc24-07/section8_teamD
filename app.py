@@ -1,8 +1,11 @@
+import traceback
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 import os
+
+from api.rakuten_api import fetch_recipe_categories, fetch_recipe_category_ranking
 import openai
 import traceback
 from bot.openai_handler import generate_keywords
@@ -18,6 +21,11 @@ handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
 def webhook():
   signature = request.headers["X-Line-Signature"]
   body = request.get_data(as_text=True)
+  
+  # print("--------------", flush=True)
+  # print(request.headers, flush=True)
+  # print(body, flush=True)
+  # print("--------------", flush=True)
 
   try:
     handler.handle(body, signature)
@@ -31,23 +39,14 @@ def webhook():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    user_message = event.message.text
-    print(f"Received LINE message: {user_message}")  # 受信メッセージを出力
-
-    # OpenAI APIにリクエストを送信
     try:
-        keywords = generate_keywords(user_message)
-        print(f"Generated keywords: {keywords}")
-        reply_text = f"楽天Recipe APIのキーワード: {keywords}"
-    except Exception as e:
-        print(f"Error handling message: {e}", flush=True)
-        traceback.print_exc()
-        reply_text = "エラーです。"
-
-    # LINEに返信
-    line_bot_api.reply_message(
+      user_message = event.message.text
+      line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(text=reply_text)
+        TextSendMessage(text=f"RecipeMateへようこそ！")
+            )
+    except Exception as e:
+        print(f"Error handling message: {e}"
     )
 
 

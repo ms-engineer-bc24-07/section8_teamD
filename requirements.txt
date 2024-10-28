@@ -1,4 +1,8 @@
 Flask==3.0.3
 Werkzeug==3.0.4
 line-bot-sdk==2.0.1
+<<<<<<< HEAD
 openai>=1.0.0
+=======
+pandas==2.0.3
+>>>>>>> d70d42d5dd748b8ee7a7141533ab5fbf95403b40
