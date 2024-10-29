@@ -3,6 +3,12 @@ import time
 import requests
 import pandas as pd
 
+# 独自例外クラスの定義
+class NoRecipeFoundError(Exception):
+  def __init__(self, message="該当するレシピが見つかりませんでした。別のキーワードで再検索してください。"):
+    self.message = message
+    super().__init__(self.message)
+
 # 楽天レシピカテゴリ一覧API から、全カテゴリのカテゴリIDとカテゴリ名を取得する
 def fetch_recipe_categories(recipe_keyword):
   print(f"OpenAI APIから渡されたキーワード: {recipe_keyword}", flush=True)
@@ -60,9 +66,15 @@ def fetch_recipe_categories(recipe_keyword):
     # キーワードを含むカテゴリを抽出
     df_keyword = df.query('categoryName.str.contains(@recipe_keyword)', engine='python')
 
-    # ＊＊＊＊＊＊＊＊↑で抽出結果0件のときの処理＊＊＊＊＊＊＊＊
-    # ＊＊＊＊＊＊＊＊↑でカテゴリが複数あるときの処理＊＊＊＊＊＊＊＊
-    # ＊＊＊＊＊＊＊＊同じcategoryNameを含む場合、重複を削除する＊＊＊＊＊＊＊＊
+    # 抽出結果が0件のとき
+    if df_keyword.empty:
+      raise NoRecipeFoundError()
+    # 抽出結果が2件で　かつ　同じ分類のとき ※もうちょっと検討したいけど時間がない
+    elif (len(df_keyword) == 2) & (str(df_keyword.iloc[0]['categoryId']) in str(df_keyword.iloc[1]['categoryId'])):
+      df_keyword = df_keyword.drop(index=df_keyword.index[0]).reset_index(drop=True)
+    # カテゴリが複数あるとき
+    else:
+      print("*******該当するカテゴリが複数存在します。*******", flush=True)
 
     return df_keyword
   else:
