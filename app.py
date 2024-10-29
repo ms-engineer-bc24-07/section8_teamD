@@ -2,13 +2,14 @@ import traceback
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from linebot.models import MessageEvent, TextMessage, TextSendMessage, TemplateSendMessage
 import os
 
 from api.rakuten_api import fetch_recipe_categories, fetch_recipe_category_ranking
 import openai
 import traceback
 from bot.openai_handler import generate_keywords
+from template.carousel_template import create_carousel_template
 
 
 app = Flask(__name__)
@@ -21,11 +22,6 @@ handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
 def webhook():
   signature = request.headers["X-Line-Signature"]
   body = request.get_data(as_text=True)
-  
-  # print("--------------", flush=True)
-  # print(request.headers, flush=True)
-  # print(body, flush=True)
-  # print("--------------", flush=True)
 
   try:
     handler.handle(body, signature)
@@ -41,13 +37,36 @@ def webhook():
 def handle_message(event):
     try:
       user_message = event.message.text
+      keywords = generate_keywords(user_message)
+
       line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(text=f"RecipeMateへようこそ！")
-            )
+        TextSendMessage(text=f"{keywords}")
+      )
+
+      # 何かしらをトリガーとして以下のコードを実行する（レシピを取得する）。
+
+      # # ユーザが入力したカテゴリを取得
+      # df_keyword = fetch_recipe_categories(keywords)
+      # # print(df_keyword, flush=True)
+
+      # # カテゴリ内のレシピトップ4を取得
+      # df_recipe = fetch_recipe_category_ranking(df_keyword)
+      # # print(df_recipe, flush=True)
+      
+      # # カルーセルテンプレートの作成
+      # carousel_template = create_carousel_template(df_recipe)
+
+      # line_bot_api.reply_message(
+      #   event.reply_token,
+      #   TemplateSendMessage(
+      #     alt_text="トップ4のレシピ",
+      #     template=carousel_template
+      #   )
+      # )
+
     except Exception as e:
-        print(f"Error handling message: {e}"
-    )
+      print(f"Error handling message: {e}")
 
 
 if __name__ == '__main__':
