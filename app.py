@@ -75,6 +75,9 @@ def on_postback(event):
   # レシピタイトル、レシピURL、画像URLを取得
   data = event.postback.data
   recipe_title, recipe_url, food_image_url = data.split("|")
+
+  # ユーザID
+  user_id = event.source.user_id
   
   # あけぴさん、DBに保存する処理をここに書く
 
