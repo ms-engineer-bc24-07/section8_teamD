@@ -39,27 +39,31 @@ def handle_message(event):
       user_message = event.message.text
       keywords = generate_keywords(user_message)
 
-      # ユーザが入力したカテゴリを取得
-      df_keyword = fetch_recipe_categories(keywords)
-      # print(df_keyword, flush=True)
-
-      # カテゴリ内のレシピトップ4を取得
-      df_recipe = fetch_recipe_category_ranking(df_keyword)
-      # print(df_recipe, flush=True)
-      
-      # カルーセルテンプレートの作成
-      carousel_template = create_carousel_template(df_recipe)
-
       line_bot_api.reply_message(
         event.reply_token,
-        [
-          TextSendMessage(text=f"{keywords}"),
-          TemplateSendMessage(
-            alt_text="トップ4のレシピ",
-            template=carousel_template
-          )
-        ]
+        TextSendMessage(text=f"{keywords}")
       )
+
+      # 何かしらをトリガーとして以下のコードを実行する（レシピを取得する）。
+
+      # # ユーザが入力したカテゴリを取得
+      # df_keyword = fetch_recipe_categories(keywords)
+      # # print(df_keyword, flush=True)
+
+      # # カテゴリ内のレシピトップ4を取得
+      # df_recipe = fetch_recipe_category_ranking(df_keyword)
+      # # print(df_recipe, flush=True)
+      
+      # # カルーセルテンプレートの作成
+      # carousel_template = create_carousel_template(df_recipe)
+
+      # line_bot_api.reply_message(
+      #   event.reply_token,
+      #   TemplateSendMessage(
+      #     alt_text="トップ4のレシピ",
+      #     template=carousel_template
+      #   )
+      # )
 
     except Exception as e:
       print(f"Error handling message: {e}")
