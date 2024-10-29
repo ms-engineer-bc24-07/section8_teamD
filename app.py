@@ -2,7 +2,7 @@ import traceback
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage, TemplateSendMessage
+from linebot.models import MessageEvent, TextMessage, TextSendMessage, TemplateSendMessage, PostbackEvent
 import os
 
 from api.rakuten_api import fetch_recipe_categories, fetch_recipe_category_ranking
@@ -67,7 +67,25 @@ def handle_message(event):
 
     except Exception as e:
       print(f"Error handling message: {e}")
+      traceback.format_exc()
 
+# お気に入り登録ボタンを押したとき
+@handler.add(PostbackEvent)
+def on_postback(event):
+  # レシピタイトル、レシピURL、画像URLを取得
+  data = event.postback.data
+  recipe_title, recipe_url, food_image_url = data.split("|")
+
+  # ユーザID
+  user_id = event.source.user_id
+  
+  # あけぴさん、DBに保存する処理をここに書く
+
+  # DBに登録後、メッセージをLINEに表示する
+  line_bot_api.reply_message(
+    event.reply_token,
+    TextSendMessage(text=f'「{recipe_title}」をお気に入り登録しました！')
+  )
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0', port=5000, debug=True)

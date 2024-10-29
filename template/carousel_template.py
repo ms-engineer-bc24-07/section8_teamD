@@ -1,4 +1,4 @@
-from linebot.models import CarouselTemplate, CarouselColumn, TemplateSendMessage, MessageAction, URIAction
+from linebot.models import CarouselTemplate, CarouselColumn, URIAction, PostbackTemplateAction
 
 # カルーセルテンプレートを作成する
 def create_carousel_template(df_recipe):
@@ -8,7 +8,10 @@ def create_carousel_template(df_recipe):
       title = f"{df_recipe.iloc[i]['recipeTitle']}",
       text = f"{df_recipe.iloc[i]['rank']}位　調理時間目安：{df_recipe.iloc[i]['recipeIndication']}",
       actions = [
-        MessageAction(label="お気に入り登録", text=f"{df_recipe.iloc[i]['recipeTitle']} selected")
+        PostbackTemplateAction(
+          label = 'お気に入り登録',
+          data=f"{df_recipe.iloc[i]['recipeTitle']}|{df_recipe.iloc[i]['recipeUrl']}|{df_recipe.iloc[i]['foodImageUrl']}"
+        )
       ],
       # 下記が動作しない
       # defaultAction = URIAction(
