@@ -5,7 +5,7 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage, TemplateSendMessage, PostbackEvent
 import os
 
-from api.rakuten_api import fetch_recipe_categories, fetch_recipe_category_ranking
+from api.rakuten_api import NoRecipeFoundError, fetch_recipe_categories, fetch_recipe_category_ranking
 import openai
 import traceback
 from bot.openai_handler import generate_keywords
@@ -64,7 +64,11 @@ def handle_message(event):
       #     template=carousel_template
       #   )
       # )
-
+    except NoRecipeFoundError as e:
+      line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=f"{e.message}")
+      )
     except Exception as e:
       print(f"Error handling message: {e}")
       traceback.format_exc()
