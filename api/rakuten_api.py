@@ -74,7 +74,7 @@ def fetch_recipe_category_ranking(df):
     'recipeId',           # レシピID
     'recipeTitle',        # レシピタイトル
     'recipeUrl',          # レシピURL（httpsではじまるレシピURL）
-    'foodImageUrl',      # 画像のURL(サイズ:小　httpsではじまる商品画像(70x70ピクセル)のURL）
+    'foodImageUrl',       # 画像のURL(サイズ:小　httpsではじまる商品画像(70x70ピクセル)のURL）
     # 'recipeMaterial',   # 材料名の一覧
     'recipeIndication',   # 調理時間目安
     'recipeCost',         # 費用の目安
