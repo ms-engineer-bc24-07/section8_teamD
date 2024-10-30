@@ -18,6 +18,7 @@ import pandas as pd
 
 import firebase_admin
 from firebase_admin import credentials
+from template.loading_animation import start_loading_animation
 
 
 app = Flask(__name__)
@@ -43,6 +44,10 @@ def webhook():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    # ローディングアニメーション
+    user_id = event.source.user_id
+    start_loading_animation(user_id)
+    
     user_message = event.message.text
 
     # 材料の代替案提案機能
@@ -86,6 +91,10 @@ def handle_message(event):
 
 @handler.add(PostbackEvent)
 def on_postback(event):
+    # ローディングアニメーション
+    user_id = event.source.user_id
+    start_loading_animation(user_id)
+    
     try:
         # Postbackで受け取ったデータを確認
         postback_data = event.postback.data
