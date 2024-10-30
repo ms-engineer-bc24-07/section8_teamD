@@ -2,7 +2,7 @@ import traceback
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage, TemplateSendMessage, PostbackEvent
+from linebot.models import MessageEvent, TextMessage, TextSendMessage, TemplateSendMessage, PostbackEvent, ButtonsTemplate, PostbackAction
 import os
 
 from api.rakuten_api import NoRecipeFoundError, fetch_recipe_categories, fetch_recipe_category_ranking
@@ -10,6 +10,9 @@ import openai
 import traceback
 from bot.openai_handler import generate_keywords
 from template.carousel_template import create_carousel_template
+from template.button_template import create_button_template
+import pandas as pd
+
 
 
 app = Flask(__name__)
@@ -36,60 +39,89 @@ def webhook():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     try:
-      user_message = event.message.text
-      keywords = generate_keywords(user_message)
+        user_message = event.message.text
+        keywords_list = generate_keywords(user_message)
 
-      line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=f"{keywords}")
-      )
+        # キーワードが見つからない場合の処理
+        if not keywords_list:
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text="該当するキーワードが見つかりませんでした。")
+            )
+            return
+        # create_button_template関数を使用してボタンテンプレートを生成
+        message_template = create_button_template(keywords_list)
 
-      # 何かしらをトリガーとして以下のコードを実行する（レシピを取得する）。
+        # ボタンテンプレートをLINEに送信
+        line_bot_api.reply_message(
+            event.reply_token,
+            message_template
+        )
 
-      # # ユーザが入力したカテゴリを取得
-      # df_keyword = fetch_recipe_categories(keywords)
-      # # print(df_keyword, flush=True)
-
-      # # カテゴリ内のレシピトップ4を取得
-      # df_recipe = fetch_recipe_category_ranking(df_keyword)
-      # # print(df_recipe, flush=True)
-      
-      # # カルーセルテンプレートの作成
-      # carousel_template = create_carousel_template(df_recipe)
-
-      # line_bot_api.reply_message(
-      #   event.reply_token,
-      #   TemplateSendMessage(
-      #     alt_text="トップ4のレシピ",
-      #     template=carousel_template
-      #   )
-      # )
-    except NoRecipeFoundError as e:
-      line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=f"{e.message}")
-      )
     except Exception as e:
-      print(f"Error handling message: {e}")
-      traceback.format_exc()
+        print(f"Error handling message: {e}")
+        traceback.print_exc()
 
-# お気に入り登録ボタンを押したとき
 @handler.add(PostbackEvent)
 def on_postback(event):
-  # レシピタイトル、レシピURL、画像URLを取得
-  data = event.postback.data
-  recipe_title, recipe_url, food_image_url = data.split("|")
+    try:
+        # Postbackで受け取ったデータ（キーワード）を確認
+        selected_keyword = event.postback.data
+        print(f"ユーザーが選択したキーワード: {selected_keyword}")  # デバッグ用に出力
+        
+        # 選択されたキーワードからカテゴリを取得
+        df_keyword = fetch_recipe_categories(selected_keyword)
+        if df_keyword.empty:
+            raise NoRecipeFoundError("該当するレシピが見つかりませんでした。別のキーワードで再検索してください。")
+        
+        df_recipe = fetch_recipe_category_ranking(df_keyword)
+        if df_recipe.empty:
+            raise NoRecipeFoundError("該当するレシピが見つかりませんでした。別のキーワードで再検索してください。")
+        
+        # カルーセルテンプレートの作成
+        carousel_template = create_carousel_template(df_recipe)
 
-  # ユーザID
-  user_id = event.source.user_id
-  
-  # あけぴさん、DBに保存する処理をここに書く
+        # カルーセルテンプレートをLINEに送信
+        line_bot_api.reply_message(
+            event.reply_token,
+            TemplateSendMessage(
+                alt_text="トップ4のレシピ",
+                template=carousel_template
+            )
+        ) 
+    except NoRecipeFoundError as e:
+        # 該当するレシピが見つからなかった場合のエラーメッセージ
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=f"{e.message}")
+        )
+    except Exception as e:
+        # 予期しないエラーの処理
+        print(f"Error handling postback: {e}")
+        traceback.print_exc()
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text="エラーが発生しました。もう一度お試しください。")
+        )   
 
-  # DBに登録後、メッセージをLINEに表示する
-  line_bot_api.reply_message(
-    event.reply_token,
-    TextSendMessage(text=f'「{recipe_title}」をお気に入り登録しました！')
-  )
+
+# # お気に入り登録ボタンを押したとき
+# @handler.add(PostbackEvent)
+# def on_postback(event):
+#   # レシピタイトル、レシピURL、画像URLを取得
+#   data = event.postback.data
+#   recipe_title, recipe_url, food_image_url = data.split("|")
+
+#   # ユーザID
+#   user_id = event.source.user_id
+
+#   # あけぴさん、DBに保存する処理をここに書く
+
+#   # DBに登録後、メッセージをLINEに表示する
+#   line_bot_api.reply_message(
+#     event.reply_token,
+#     TextSendMessage(text=f'「{recipe_title}」をお気に入り登録しました！')
+#   )
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0', port=5000, debug=True)

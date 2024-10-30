@@ -69,13 +69,12 @@ def fetch_recipe_categories(recipe_keyword):
     # 抽出結果が0件のとき
     if df_keyword.empty:
       raise NoRecipeFoundError()
-    # 抽出結果が2件で　かつ　同じ分類のとき ※もうちょっと検討したいけど時間がない
-    elif (len(df_keyword) == 2) & (str(df_keyword.iloc[0]['categoryId']) in str(df_keyword.iloc[1]['categoryId'])):
-      df_keyword = df_keyword.drop(index=df_keyword.index[0]).reset_index(drop=True)
+    # 抽出結果が2件以上で、同じ分類のとき
+    elif len(df_keyword) >= 2 and (str(df_keyword.iloc[0]['categoryId']) in str(df_keyword.iloc[1]['categoryId'])):
+        df_keyword = df_keyword.drop(index=df_keyword.index[0]).reset_index(drop=True)
     # カテゴリが複数あるとき
     else:
       print("*******該当するカテゴリが複数存在します。*******", flush=True)
-
     return df_keyword
   else:
     raise Exception("Failed to fetch data from Rakuten API")
