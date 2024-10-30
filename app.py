@@ -1,5 +1,6 @@
 import traceback
 from flask import Flask, request, abort
+from firebase.main import upload_to_firestore
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage, TemplateSendMessage, PostbackEvent, ButtonsTemplate, PostbackAction
@@ -15,7 +16,8 @@ from template.carousel_template import create_carousel_template
 from template.button_template import create_button_template
 import pandas as pd
 
-
+import firebase_admin
+from firebase_admin import credentials
 
 
 app = Flask(__name__)
@@ -125,6 +127,7 @@ def on_postback(event):
             user_id = event.source.user_id
 
             # DBに保存する処理をここに記述（例: save_to_favorites(user_id, recipe_id, recipe_title, recipe_url, food_image_url)）
+            upload_to_firestore(user_id, recipe_id, recipe_title, recipe_url, food_image_url)
 
             # お気に入り登録完了のメッセージをLINEに送信
             line_bot_api.reply_message(
@@ -147,3 +150,5 @@ def on_postback(event):
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0', port=5000, debug=True)
+
+  default_app = firebase_admin.initialize_app()
