@@ -96,14 +96,15 @@ def on_postback(event):
 
         # お気に入り追加処理 (データが "favorite:" で始まる場合)
         elif postback_data.startswith("favorite:"):
-            # データからレシピ情報を取得
-            recipe_info = postback_data.split("favorite:")[1].split("|")
-            recipe_title, recipe_url, food_image_url = recipe_info
+            # レシピ情報（タイトル、レシピURL，画像URL）を取得
+            recipe_infos = postback_data.replace("favorite:", "")
+            recipe_info = recipe_infos.split("|")
+            recipe_id, recipe_title, recipe_url, food_image_url = recipe_info
 
             # ユーザーIDを取得
             user_id = event.source.user_id
 
-            # DBに保存する処理をここに記述（例: save_to_favorites(user_id, recipe_title, recipe_url, food_image_url)）
+            # DBに保存する処理をここに記述（例: save_to_favorites(user_id, recipe_id, recipe_title, recipe_url, food_image_url)）
 
             # お気に入り登録完了のメッセージをLINEに送信
             line_bot_api.reply_message(
@@ -123,74 +124,6 @@ def on_postback(event):
             event.reply_token,
             TextSendMessage(text="エラーが発生しました。もう一度お試しください。")
         )
-
-
-
-
-
-
-
-
-# @handler.add(PostbackEvent)
-# def on_postback(event):
-#     try:
-#         # Postbackで受け取ったデータ（キーワード）を確認
-#         selected_keyword = event.postback.data
-#         print(f"ユーザーが選択したキーワード: {selected_keyword}")  # デバッグ用に出力
-        
-#         # 選択されたキーワードからカテゴリを取得
-#         df_keyword = fetch_recipe_categories(selected_keyword)
-#         if df_keyword.empty:
-#             raise NoRecipeFoundError("該当するレシピが見つかりませんでした。別のキーワードで再検索してください。")
-        
-#         df_recipe = fetch_recipe_category_ranking(df_keyword)
-#         if df_recipe.empty:
-#             raise NoRecipeFoundError("該当するレシピが見つかりませんでした。別のキーワードで再検索してください。")
-        
-#         # カルーセルテンプレートの作成
-#         carousel_template = create_carousel_template(df_recipe)
-
-#         # カルーセルテンプレートをLINEに送信
-#         line_bot_api.reply_message(
-#             event.reply_token,
-#             TemplateSendMessage(
-#                 alt_text="トップ4のレシピ",
-#                 template=carousel_template
-#             )
-#         ) 
-#     except NoRecipeFoundError as e:
-#         # 該当するレシピが見つからなかった場合のエラーメッセージ
-#         line_bot_api.reply_message(
-#             event.reply_token,
-#             TextSendMessage(text=f"{e.message}")
-#         )
-#     except Exception as e:
-#         # 予期しないエラーの処理
-#         print(f"Error handling postback: {e}")
-#         traceback.print_exc()
-#         line_bot_api.reply_message(
-#             event.reply_token,
-#             TextSendMessage(text="エラーが発生しました。もう一度お試しください。")
-#         )   
-
-
-# # お気に入り登録ボタンを押したとき
-# @handler.add(PostbackEvent)
-# def on_postback(event):
-#   # レシピタイトル、レシピURL、画像URLを取得
-#   data = event.postback.data
-#   recipe_title, recipe_url, food_image_url = data.split("|")
-
-#   # ユーザID
-#   user_id = event.source.user_id
-
-#   # あけぴさん、DBに保存する処理をここに書く
-
-#   # DBに登録後、メッセージをLINEに表示する
-#   line_bot_api.reply_message(
-#     event.reply_token,
-#     TextSendMessage(text=f'「{recipe_title}」をお気に入り登録しました！')
-#   )
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0', port=5000, debug=True)

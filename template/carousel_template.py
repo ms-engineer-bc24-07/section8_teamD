@@ -10,7 +10,7 @@ def create_carousel_template(df_recipe):
       actions = [
         PostbackTemplateAction(
           label = 'お気に入り登録',
-          data=f"{df_recipe.iloc[i]['recipeTitle']}|{df_recipe.iloc[i]['recipeUrl']}|{df_recipe.iloc[i]['foodImageUrl']}"
+          data=f"favorite:{df_recipe.iloc[i]['recipeId']}|{df_recipe.iloc[i]['recipeTitle']}|{df_recipe.iloc[i]['recipeUrl']}|{df_recipe.iloc[i]['foodImageUrl']}"
         ),
         URIAction(
           type="uri",
