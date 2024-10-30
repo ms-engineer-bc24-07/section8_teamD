@@ -11,14 +11,13 @@ def create_carousel_template(df_recipe):
         PostbackTemplateAction(
           label = 'お気に入り登録',
           data=f"{df_recipe.iloc[i]['recipeTitle']}|{df_recipe.iloc[i]['recipeUrl']}|{df_recipe.iloc[i]['foodImageUrl']}"
+        ),
+        URIAction(
+          type="uri",
+          label="レシピを見る",
+          uri=f"{df_recipe.iloc[i]['recipeUrl']}"
         )
-      ],
-      # 下記が動作しない
-      # defaultAction = URIAction(
-      #   type="uri",
-      #   label="レシピを見る",
-      #   uri="https://webservice.rakuten.co.jp/documentation/recipe-category-ranking"
-      # )
+      ]
     ) for i in range(len(df_recipe))
   ]
   
