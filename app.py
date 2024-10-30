@@ -9,9 +9,12 @@ from api.rakuten_api import NoRecipeFoundError, fetch_recipe_categories, fetch_r
 import openai
 import traceback
 from bot.openai_handler import generate_keywords
+from bot.favorite_handler import get_favorites
+from bot.substitute_handler import get_ingredient_substitute
 from template.carousel_template import create_carousel_template
 from template.button_template import create_button_template
 import pandas as pd
+
 
 
 
@@ -38,8 +41,25 @@ def webhook():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    user_message = event.message.text
+
+    # 材料の代替案提案機能
+    if "の代わり" in user_message or "の代用" in user_message:
+        print("代替案のリクエストを確認")
+        ingredient = user_message.split("の代わり")[0].strip()  # 簡易的な材料名抽出
+        substitute_message = get_ingredient_substitute(ingredient)
+        line_bot_api.reply_message(event.reply_token, substitute_message)
+        return
+
+    # お気に入り表示機能
+    elif user_message == "お気に入りを表示":
+        user_id = event.source.user_id
+        favorites_message = get_favorites(user_id)
+        line_bot_api.reply_message(event.reply_token, favorites_message)
+        return    
+        
     try:
-        user_message = event.message.text
+        # user_message = event.message.text
         keywords_list = generate_keywords(user_message)
 
         # キーワードが見つからない場合の処理

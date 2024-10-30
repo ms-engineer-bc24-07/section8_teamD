@@ -13,7 +13,7 @@ def generate_keywords(user_message):
         f"カテゴリの単語のみを返してください。-や数字や余分な説明は入れないでください。:\n\n{user_message}"
     )
     response = openai.chat.completions.create(
-            model="gpt-4o",  # 必要に応じてモデルを変更
+            model="gpt-4o", 
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": prompt}
@@ -21,5 +21,4 @@ def generate_keywords(user_message):
         )
     keywords_text = response.choices[0].message.content.strip()
     keywords_list = [keyword.strip() for keyword in keywords_text.splitlines() if keyword]  # 3つのキーワードをリスト形式で取得
-    return keywords_list[:3]  # 最初の3つを返す
-    # return keywords
+    return keywords_list[:3]  
