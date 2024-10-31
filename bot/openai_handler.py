@@ -9,7 +9,7 @@ def generate_keywords(user_message):
     category_list = load_categories_from_cache()
     prompt = (
         f"以下は楽天の料理カテゴリ一覧です:\n{', '.join(category_list)}\n"
-        f"次の材料や料理時間、気分にあったカテゴリを楽天の料理カテゴリから３つ提案してください。"
+        f"次の材料組み合わせてできる料理や料理時間にあったカテゴリを楽天の料理カテゴリから３つ提案してください。"
         f"カテゴリの単語のみを返してください。-や数字や余分な説明は入れないでください。:\n\n{user_message}"
     )
     response = openai.chat.completions.create(
